@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <!-- saved from url=(0062)file:///Users/starboy/Downloads/Resale%20Ledger.html#inventory -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body style="">
@@ -193,3 +194,44 @@ h1,h2,h3,p{margin:0}
 </div>
 
 <script>
+Use code with caution.
+let items = JSON.parse(localStorage.getItem('resaleItems') || '[]');
+function saveConfig() {
+localStorage.setItem('googleWebAppUrl', document.getElementById('webAppUrl').value);
+}
+window.onload = function() {
+document.getElementById('webAppUrl').value = localStorage.getItem('googleWebAppUrl') || '';
+renderTable();
+}
+function addNewItem() {
+const name = document.getElementById('itemName').value;
+const cost = document.getElementById('itemCost').value;
+const price = document.getElementById('itemPrice').value;
+if(!name || !cost || !price) return alert('Please fill out all item fields!');
+items.push({ name, cost, price, date: new Date().toLocaleDateString() });
+localStorage.setItem('resaleItems', JSON.stringify(items));
+document.getElementById('itemName').value = '';
+document.getElementById('itemCost').value = '';
+document.getElementById('itemPrice').value = '';
+renderTable();
+syncToCloud();
+}
+function renderTable() {
+const container = document.getElementById('ledgerTable');
+container.innerHTML = items.length === 0 ? 'No inventory added yet.' : '';
+items.forEach((item, index) => {
+container.innerHTML += <div style="display:flex; justify-content:space-between; background:var(--raised); padding:10px 14px; border-radius:8px; border:1px solid var(--line)"> <span><b>${item.name}</b> <small class="sub">(${item.date})</small></span> <span>Cost: $${item.cost} | Price: $${item.price}</span> </div>;
+});
+}
+function syncToCloud() {
+const url = localStorage.getItem('googleWebAppUrl');
+if(!url) return; // Silent if url isn't set up yet
+fetch(url, {
+method: 'POST',
+mode: 'no-cors',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ items: items })
+}).then(() => {
+console.log('Synced successfully');
+}).catch(err => console.error(err));
+}
