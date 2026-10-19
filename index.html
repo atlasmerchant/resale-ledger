@@ -3,8 +3,8 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body style="">
 <title>Resale Ledger</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link rel="preconnect" href="https://googleapis.com">
+<link rel="preconnect" href="https://gstatic.com" crossorigin="">
 <link rel="stylesheet" href="./Resale Ledger AM_files/css2">
 <style>
 /* Layout: slim sidebar and one wide working column; tab bar on phones. Charcoal ground, hairline gold, channel colors only inside charts and pills. */
@@ -90,6 +90,25 @@ h1,h2,h3,p{margin:0}
 .btn-icon{width:34px;height:34px;padding:0;border:0;border-radius:8px;background:none;color:var(--ink-2);font-size:22px;line-height:1}
 .btn-icon:hover{background:var(--raised);color:var(--ink)}
 
+.cloud-status {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cloud-status input {
+  background: var(--field);
+  border: 1px solid var(--line-strong);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  width: 100%;
+}
+
 .seg{display:inline-flex;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
 .seg button{height:30px;padding:0 12px;border:0;border-radius:7px;background:none;color:var(--ink-2);font-weight:600;font-size:12.5px}
 .seg button:hover{color:var(--ink)}
@@ -133,66 +152,44 @@ h1,h2,h3,p{margin:0}
 .hit{fill:transparent;outline:none}
 .hit:focus-visible{fill:rgba(201,164,92,.09)}
 .tip{position:absolute;}
-
-/* Added Backup UI Style */
-.backup-section {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  background: var(--surface);
-  border: 1px dashed var(--line-strong);
-  border-radius: 8px;
-  margin-top: 15px;
-}
 </style>
 </head>
 <body>
 
 <div class="app">
-  <!-- Sidebar Panel -->
+  <!-- Sidebar -->
   <div class="side">
     <div class="brand">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      <div>
-        <b>Resale Ledger</b>
-        <small>Standalone Tool</small>
-      </div>
-    </div>
-    
-    <div class="nav">
-      <button aria-current="page">Dashboard</button>
+      <b>Resale Ledger</b>
+      <small>Live Cloud Sync</small>
     </div>
 
-    <!-- Account-Free Backup Box -->
-    <div class="backup-section">
-      <button class="btn btn-sm btn-gold" onclick="exportData()">Backup Ledger</button>
-      <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">Load Backup</button>
-      <input type="file" id="importFile" style="display:none" onchange="importData(this)">
-    </div>
-
-    <div class="side-foot">
-      <div class="status"><i></i> Ledger Status Active</div>
+    <!-- Live Google Sheet Setup Widget -->
+    <div class="cloud-status">
+      <p class="eyebrow" style="color:var(--gold)">Cloud Connection</p>
+      <input type="text" id="webAppUrl" placeholder="Paste Google Web App URL here..." onchange="saveConfig()">
+      <button class="btn btn-sm btn-gold" onclick="syncToCloud()">Sync Now</button>
     </div>
   </div>
 
-  <!-- Primary Working Area -->
   <div class="main">
     <div class="top">
-      <div>
-        <h1>Profit Dashboard</h1>
-        <p>Your ongoing resell stats and metrics ledger balance.</p>
+      <h1>Your Active Ledger</h1>
+      <div class="top-actions">
+        <input type="text" id="itemName" placeholder="Item Name" class="btn" style="text-align:left; background:var(--field)">
+        <input type="number" id="itemCost" placeholder="Cost" class="btn" style="width:90px; background:var(--field)">
+        <input type="number" id="itemPrice" placeholder="Price" class="btn" style="width:90px; background:var(--field)">
+        <button class="btn btn-gold" onclick="addNewItem()">Add Item</button>
       </div>
     </div>
-
+    
     <div class="panel">
-      <div class="panel-head">
-        <h2>Performance Overview</h2>
+      <h2>Inventory Records</h2>
+      <div id="ledgerTable" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;">
+        <!-- Dynamic items show here -->
       </div>
-      <div class="hero">
-        <div class="hero-main">
-          <span class="eyebrow">Net Balance</span>
-          <div class="hero-val" id="netValue">$0.00</div>
-        </div>
-        <div class="stats">
-          <div class="stat">
-            <span class="s">Total Revenue</span>
+    </div>
+  </div>
+</div>
+
+<script>
